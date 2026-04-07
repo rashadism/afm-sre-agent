@@ -1,0 +1,33 @@
+replicaCount: 1
+
+agentService:
+  image:
+    repository: rashadxyz/afm-agent-service
+    tag: latest
+    pullPolicy: Always
+  port: 8090
+  dbPath: "/data/reports.db"
+
+afmInterpreter:
+  image:
+    repository: ghcr.io/wso2/afm-langchain-interpreter
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 8085
+
+agentFile: "rca-agent.afm.md"
+agentDefinition: ""
+
+service:
+  type: ClusterIP
+  port: 8090
+
+env:
+  LLM_API_KEY: ""
+  MODEL_NAME: ""
+  MODEL_PROVIDER: ""
+  OBSERVER_MCP_URL: ""
+  OPENCHOREO_MCP_URL: ""
+  MCP_AUTH_TOKEN: ""
+
+resources: {}

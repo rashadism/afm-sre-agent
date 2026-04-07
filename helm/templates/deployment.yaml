@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-{{ .Chart.Name }}
+  labels:
+    app: {{ .Chart.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+    spec:
+      containers:
+        - name: agent-service
+          image: "{{ .Values.agentService.image.repository }}:{{ .Values.agentService.image.tag }}"
+          imagePullPolicy: {{ .Values.agentService.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.agentService.port }}
+          env:
+            - name: AFM_AGENT_URL
+              value: "http://localhost:{{ .Values.afmInterpreter.port }}"
+            - name: LISTEN_ADDR
+              value: ":{{ .Values.agentService.port }}"
+            - name: DB_PATH
+              value: {{ .Values.agentService.dbPath | quote }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+
+        - name: afm-interpreter
+          image: "{{ .Values.afmInterpreter.image.repository }}:{{ .Values.afmInterpreter.image.tag }}"
+          imagePullPolicy: {{ .Values.afmInterpreter.image.pullPolicy }}
+          command: ["afm", "run", "/agents/{{ .Values.agentFile }}", "--port", "{{ .Values.afmInterpreter.port }}"]
+          ports:
+            - containerPort: {{ .Values.afmInterpreter.port }}
+          env:
+            {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          volumeMounts:
+            - name: agent-definition
+              mountPath: /agents
+              readOnly: true
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+
+      volumes:
+        - name: agent-definition
+          configMap:
+            name: {{ .Release.Name }}-agent-definition
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-data
