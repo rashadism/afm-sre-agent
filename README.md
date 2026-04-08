@@ -44,7 +44,7 @@ kubectl rollout restart deployment observer -n openchoreo-observability-plane
 ### 5. Point UI reports route to AFM agent
 
 ```bash
-kubectl patch httproute rca-agent -n openchoreo-observability-plane --type json -p '[
+kubectl patch httproute ai-rca-agent -n openchoreo-observability-plane --type json -p '[
   {"op":"replace","path":"/spec/rules/1/backendRefs/0/name","value":"afm-rca-afm-agent"},
   {"op":"replace","path":"/spec/rules/1/backendRefs/0/port","value":8090}
 ]'
